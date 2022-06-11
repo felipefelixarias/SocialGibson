@@ -5,6 +5,8 @@
 iGibson is a simulation environment providing fast visual rendering and physics simulation based on Bullet. iGibson is equipped with fifteen fully interactive high quality scenes, hundreds of large 3D scenes reconstructed from real homes and offices, and compatibility with datasets like CubiCasa5K and 3D-Front, providing 8000+ additional interactive scenes. Some of the features of iGibson include domain randomization, integration with motion planners and easy-to-use tools to collect human demonstrations. With these scenes and features, iGibson allows researchers to train and evaluate robotic agents that use visual signals to solve navigation and manipulation tasks such as opening doors, picking up and placing objects, or searching in cabinets.
 
 ### Latest Updates
+[6/11/2022] This branch contains the last version of master before the fork diverged from the original iGibson project
+
 [8/9/2021] Major update to iGibson to reach iGibson 2.0, for details please refer to our [arxiv preprint](https://arxiv.org/abs/2108.03272). 
 
 -  iGibson 2.0 supports object states, including temperature, wetness level, cleanliness level, and toggled and sliced states, necessary to cover a wider range of tasks. 
