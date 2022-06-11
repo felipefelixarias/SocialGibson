@@ -6,6 +6,8 @@ iGibson is a simulation environment providing fast visual rendering and physics 
 
 ### Latest Updates
 
+[06/11/2022] This fork of iGibson, dubbed Gibson Social, was officially created.
+
 [12/1/2020] Major update to iGibson to reach iGibson v1.0, for details please refer to our [arxiv preprint](https://arxiv.org/abs/2012.02924). 
 
 - Release of iGibson dataset that includes 15 fully interactive scenes and 500+ object models annotated with materials and physical attributes on top of [existing 3D articulated models](https://cs.stanford.edu/~kaichun/partnet/).
