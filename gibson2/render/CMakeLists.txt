@@ -27,6 +27,9 @@ if (USE_CUDA)
 endif ()
 
 add_subdirectory(pybind11)
+add_subdirectory(cryptopp)
+include_directories(cryptopp)
+
 # Add GLM include directory
 include_directories("glm")
 
@@ -49,25 +52,25 @@ else ()
     add_library(EGLRendererContext MODULE glad/egl.cpp glad/gl.cpp cpp/mesh_renderer.cpp cpp/egl_mesh_renderer.cpp)
 endif ()
 
-add_library(tinyobjloader MODULE cpp/tinyobjloader/tiny_obj_loader.cc cpp/tinyobjloader/bindings.cc)
+add_library(tinyobjloader MODULE cpp/tinyobjloader/tiny_obj_loader.cc cpp/tinyobjloader/tiny_obj_loader_decrypt.cc cpp/tinyobjloader/bindings.cc)
 if (USE_GLFW)
     add_library(GLFWRendererContext MODULE glad/gl.cpp cpp/glfw_mesh_renderer.cpp cpp/mesh_renderer.cpp)
 endif ()
 
 
 if (USE_GLAD)
-    target_link_libraries(EGLRendererContext PRIVATE pybind11::module dl pthread)
+    target_link_libraries(EGLRendererContext PRIVATE pybind11::module dl pthread cryptopp-static)
     if (USE_GLFW)
-        target_link_libraries(GLFWRendererContext PRIVATE pybind11::module dl glfw ${GLFW_LIBRARIES})
+        target_link_libraries(GLFWRendererContext PRIVATE pybind11::module dl glfw ${GLFW_LIBRARIES} cryptopp-static)
     endif ()
 else ()
-    target_link_libraries(EGLRendererContext PRIVATE pybind11::module dl pthread EGL ${OPENGL_LIBRARIES})
+    target_link_libraries(EGLRendererContext PRIVATE pybind11::module dl pthread EGL ${OPENGL_LIBRARIES} cryptopp-static)
     if (USE_GLFW)
-        target_link_libraries(GLFWRendererContext PRIVATE pybind11::module dl glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES})
+        target_link_libraries(GLFWRendererContext PRIVATE pybind11::module dl glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} cryptopp-static)
     endif ()
 endif ()
 
-target_link_libraries(tinyobjloader PRIVATE pybind11::module)
+target_link_libraries(tinyobjloader PRIVATE pybind11::module cryptopp-static)
 
 set_target_properties(EGLRendererContext PROPERTIES PREFIX "${PYTHON_MODULE_PREFIX}"
         SUFFIX "${PYTHON_MODULE_EXTENSION}")

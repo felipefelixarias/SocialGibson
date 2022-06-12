@@ -63,6 +63,109 @@ class Material(object):
         return self.__str__()
 
 
+class ProceduralMaterial(Material):
+    def __init__(self,
+                 material_folder="",
+                 material_type='texture',
+                 kd=[0.5, 0.5, 0.5],
+                 texture_id=None,
+                 metallic_texture_id=None,
+                 roughness_texture_id=None,
+                 normal_texture_id=None):
+        """
+        :param material_type: color or texture
+        :param kd: color parameters
+        :param texture_id: albedo texture id
+        :param metallic_texture_id: metallic texture id
+        :param roughness_texture_id: roughness texture id
+        :param normal_texture_id: normal texture id
+        :param transform_param: x scale, y scale, rotation
+        """
+        super(ProceduralMaterial, self).__init__(
+            material_type=material_type,
+            kd=kd,
+            texture_id=texture_id,
+            metallic_texture_id=metallic_texture_id,
+            roughness_texture_id=roughness_texture_id,
+            normal_texture_id=normal_texture_id,
+        )
+        self.material_folder = material_folder
+        # a list of object states that can change the material
+        self.states = []
+        # mapping from object states to transformed material filenames
+        # that should be applied when the states are evaluated to be True
+        self.texture_filenames = {}
+        # mapping from object states to loaded texture ids from the material
+        # filenames stored in self.texture_filenames. Will be popuated by
+        # load_procedural_material in mesh_renderer_cpu.py
+        self.texture_ids = {}
+        # default texture id. Will be populated by load_procedural_material
+        # in mesh_renderer_cpu.py
+        self.default_texture_id = None
+
+        # after material changes, request_update is set to True so that
+        # optimized renderer can update the texture ids
+        self.request_update = False
+        # keep tracks of all the requests since the last texture update
+        self.requests = []
+
+    def __str__(self):
+        return (
+            "ProceduralMaterial(material_type: {}, texture_id: {}, "
+            "metallic_texture_id: {}, roughness_texture_id: {}, "
+            "normal_texture_id: {}, color: {})".format(
+                self.material_type, self.texture_id, self.metallic_texture_id,
+                self.roughness_texture_id, self.normal_texture_id, self.kd)
+        )
+
+    def request_texture_change(self, state):
+        self.requests.append(state)
+
+    def add_state(self, state):
+        self.states.append(state)
+
+    def lookup_or_create_transformed_texture(self):
+        save_path = os.path.join(gibson2.ig_dataset_path, 'tmp')
+        os.makedirs(save_path, exist_ok=True)
+
+        has_encrypted_texture = os.path.exists(os.path.join(
+            self.material_folder, "DIFFUSE.encrypted.png"))
+
+        suffix = '.encrypted.png' if has_encrypted_texture else '.png'
+        diffuse_tex_filename = os.path.join(
+            self.material_folder, "DIFFUSE{}".format(suffix))
+
+        for state in self.states:
+            diffuse_tex_filename_lookup = os.path.join(
+                self.material_folder, "DIFFUSE_{}{}".format(state.__name__, suffix))
+            if os.path.exists(diffuse_tex_filename_lookup):
+                self.texture_filenames[state] = diffuse_tex_filename_lookup
+            else:
+                if has_encrypted_texture:
+                    raise ValueError("cannot create transformed textures for encrypted texture")
+                diffuse_tex_filename_transformed = os.path.join(
+                    save_path, str(uuid.uuid4()) + '.png')
+                state.create_transformed_texture(diffuse_tex_filename=diffuse_tex_filename,
+                                                 diffuse_tex_filename_transformed=diffuse_tex_filename_transformed)
+                self.texture_filenames[state] = diffuse_tex_filename_transformed
+
+    def update(self):
+        if len(self.requests) == 0:
+            texture_id = self.default_texture_id
+        else:
+            requests = sorted(
+                self.requests,
+                key=lambda state: TEXTURE_CHANGE_PRIORITY[state])
+            highest_priority_state = requests[-1]
+            texture_id = self.texture_ids[highest_priority_state]
+
+        # Request update if the texture_id doesn't match the current one
+        if self.texture_id != texture_id:
+            self.texture_id = texture_id
+            self.request_update = True
+
+        self.requests.clear()
+
 class RandomizedMaterial(Material):
     """
     Randomized Material class for material randomization
