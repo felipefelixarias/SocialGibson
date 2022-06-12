@@ -68,3 +68,4 @@ build
 dist
 
 gibson2/data
+gibson2/render/mesh_renderer/libcryptopp.so.8.6
